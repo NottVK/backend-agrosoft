@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { InsumoModule } from './insumo/insumo.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { CultivoRealModule } from './cultivo_real/cultivo_real.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ConfigModule } from '@nestjs/config';
       synchronize: false,
     }),
     InsumoModule,
+    CultivoRealModule,
   ],
   controllers: [],
   providers: [],
