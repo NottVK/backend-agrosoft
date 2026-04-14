@@ -10,7 +10,7 @@ export class InsumoService {
   constructor(
     @InjectRepository(Insumo)
     private insumoRepository: Repository<Insumo>,
-  ) {}
+  ) { }
 
   async create(createInsumoDto: CreateInsumoDto) {
     const insumo = this.insumoRepository.create(createInsumoDto);

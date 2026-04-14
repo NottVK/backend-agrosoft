@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { InsumoModule } from './insumo/insumo.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { EnfermedadesModule } from './enfermedades/enfermedades.module';
+import { InstructorModule } from './instructor/instructor.module';
+import { RolModule } from './rol/rol.module';
+import { CosechaModule } from './cosecha/cosecha.module';
 
 @Module({
   imports: [
@@ -17,6 +21,10 @@ import { ConfigModule } from '@nestjs/config';
       synchronize: false,
     }),
     InsumoModule,
+    EnfermedadesModule,
+    InstructorModule,
+    RolModule,
+    CosechaModule,
   ],
   controllers: [],
   providers: [],
