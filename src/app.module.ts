@@ -6,6 +6,9 @@ import { CultivoRealModule } from './cultivo_real/cultivo_real.module';
 import { ActividadEjecutadaModule } from './actividad-ejecutada/actividad-ejecutada.module';
 import { AccionCorrectivaModule } from './accion-correctiva/accion-correctiva.module';
 import { UsuarioModule } from './usuario/usuario.module';
+import { EvidenciaModule } from './evidencia/evidencia.module';
+import { AdministradorModule } from './administrador/administrador.module';
+import { TratamientoModule } from './tratamiento/tratamiento.module';
 
 @Module({
   imports: [
@@ -25,6 +28,9 @@ import { UsuarioModule } from './usuario/usuario.module';
     ActividadEjecutadaModule,
     AccionCorrectivaModule,
     UsuarioModule,
+    EvidenciaModule,
+    AdministradorModule,
+    TratamientoModule,
   ],
   controllers: [],
   providers: [],
