@@ -3,8 +3,8 @@ import { Type } from 'class-transformer';
 
 export class CreateEnfermedadeDto {
     @IsString()
-    nombre_enfermedad: string | undefined;
+    nombre_enfermedad: string;
 
     @IsString()
-    grado_daño: string | undefined;
+    grado_daño: string;
 }

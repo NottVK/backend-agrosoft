@@ -2,10 +2,17 @@ import { Module } from '@nestjs/common';
 import { InsumoModule } from './insumo/insumo.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { CultivoRealModule } from './cultivo_real/cultivo_real.module';
+import { ActividadEjecutadaModule } from './actividad-ejecutada/actividad-ejecutada.module';
+import { AccionCorrectivaModule } from './accion-correctiva/accion-correctiva.module';
+import { UsuarioModule } from './usuario/usuario.module';
+import { EvidenciaModule } from './evidencia/evidencia.module';
+import { AdministradorModule } from './administrador/administrador.module';
+import { TratamientoModule } from './tratamiento/tratamiento.module';
+import { CosechaModule } from './cosecha/cosecha.module';
 import { EnfermedadesModule } from './enfermedades/enfermedades.module';
 import { InstructorModule } from './instructor/instructor.module';
 import { RolModule } from './rol/rol.module';
-import { CosechaModule } from './cosecha/cosecha.module';
 
 @Module({
   imports: [
@@ -21,10 +28,19 @@ import { CosechaModule } from './cosecha/cosecha.module';
       synchronize: false,
     }),
     InsumoModule,
+    CultivoRealModule,
+    ActividadEjecutadaModule,
+    AccionCorrectivaModule,
+    UsuarioModule,
+    EvidenciaModule,
+    AdministradorModule,
+    TratamientoModule,
+    CosechaModule,
     EnfermedadesModule,
     InstructorModule,
     RolModule,
-    CosechaModule,
+    
+
   ],
   controllers: [],
   providers: [],
