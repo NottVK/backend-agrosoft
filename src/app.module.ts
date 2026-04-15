@@ -3,6 +3,9 @@ import { InsumoModule } from './insumo/insumo.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { CultivoRealModule } from './cultivo_real/cultivo_real.module';
+import { ActividadEjecutadaModule } from './actividad-ejecutada/actividad-ejecutada.module';
+import { AccionCorrectivaModule } from './accion-correctiva/accion-correctiva.module';
+import { UsuarioModule } from './usuario/usuario.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { CultivoRealModule } from './cultivo_real/cultivo_real.module';
     }),
     InsumoModule,
     CultivoRealModule,
+    ActividadEjecutadaModule,
+    AccionCorrectivaModule,
+    UsuarioModule,
   ],
   controllers: [],
   providers: [],
