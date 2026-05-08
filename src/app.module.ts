@@ -15,6 +15,8 @@ import { InstructorModule } from './instructor/instructor.module';
 import { RolModule } from './rol/rol.module';
 import { ReporteModule } from './reporte/reporte.module';
 import { VentaModule } from './venta/venta.module';
+import { PlagasModule } from './plagas/plagas.module';
+import { IncidenciaModule } from './incidencia/incidencia.module';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { VentaModule } from './venta/venta.module';
     RolModule,
     ReporteModule,
     VentaModule,
+    PlagasModule,
+    IncidenciaModule,
   ],
   controllers: [],
   providers: [],
