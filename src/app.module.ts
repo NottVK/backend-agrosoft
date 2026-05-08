@@ -39,8 +39,6 @@ import { RolModule } from './rol/rol.module';
     EnfermedadesModule,
     InstructorModule,
     RolModule,
-    
-
   ],
   controllers: [],
   providers: [],

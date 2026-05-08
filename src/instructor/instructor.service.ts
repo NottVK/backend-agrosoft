@@ -1,35 +1,74 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateInstructorDto } from './dto/create-instructor.dto';
 import { UpdateInstructorDto } from './dto/update-instructor.dto';
-import { Repository } from 'typeorm';
-import { instructor } from './entities/instructor.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Instructor } from './entities/instructor.entity'; // Ahora sí coinciden
 
 @Injectable()
 export class InstructorService {
   constructor(
-    @InjectRepository(instructor)
-    private readonly instructorRepository: Repository<instructor>,
-  ){}
+    @InjectRepository(Instructor)
+    private readonly instructorRepository: Repository<Instructor>,
+  ) {}
 
-  async create(createinstructorDto: CreateInstructorDto) {
-    const instructor = this.instructorRepository.create(createinstructorDto);
-    return await this.instructorRepository.save(instructor);
+  async create(createInstructorDto: CreateInstructorDto) {
+    try {
+      const instructor = this.instructorRepository.create(createInstructorDto);
+      return await this.instructorRepository.save(instructor);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error al crear el instructor');
+    }
   }
 
-  findAll() {
-    return this.instructorRepository.find();
+  async findAll() {
+    return await this.instructorRepository.find();
   }
 
-  findOne(id: number) {
-    return this.instructorRepository.findOneBy({ id_instructor: id });
+  async findOne(id: number) {
+    // Buscamos por el nombre exacto de la columna en la entidad
+    const instructor = await this.instructorRepository.findOneBy({
+      id_instructor: id,
+    });
+
+    if (!instructor) {
+      throw new NotFoundException(`Instructor con id ${id} no encontrado`);
+    }
+
+    return instructor;
   }
 
   async update(id: number, updateInstructorDto: UpdateInstructorDto) {
-    return this.instructorRepository.update(id, updateInstructorDto);
+    const instructor = await this.instructorRepository.preload({
+      id_instructor: id,
+      ...updateInstructorDto,
+    });
+
+    if (!instructor) {
+      throw new NotFoundException(`Instructor con id ${id} no encontrado`);
+    }
+
+    try {
+      return await this.instructorRepository.save(instructor);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Error al actualizar el instructor',
+      );
+    }
   }
 
   async remove(id: number) {
-    return this.instructorRepository.delete(id);
+    const instructor = await this.findOne(id);
+    await this.instructorRepository.remove(instructor);
+    return {
+      message: 'Instructor eliminado correctamente',
+    };
   }
 }

@@ -1,42 +1,81 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
 import { CreateTratamientoDto } from './dto/create-tratamiento.dto';
 import { UpdateTratamientoDto } from './dto/update-tratamiento.dto';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Tratamiento } from './entities/tratamiento.entity';
+
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class TratamientoService {
   constructor(
     @InjectRepository(Tratamiento)
-    private tratamientoRepository: Repository<Tratamiento>,
+    private readonly tratamientoRepository: Repository<Tratamiento>,
   ) {}
+
   async create(createTratamientoDto: CreateTratamientoDto) {
-    const tratamiento = this.tratamientoRepository.create(createTratamientoDto);
-    return this.tratamientoRepository.save(tratamiento);
+    try {
+      const tratamiento =
+        this.tratamientoRepository.create(createTratamientoDto);
+
+      return await this.tratamientoRepository.save(tratamiento);
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al crear el tratamiento');
+    }
   }
 
   async findAll() {
-    return this.tratamientoRepository.find();
+    return await this.tratamientoRepository.find();
   }
 
   async findOne(id: number) {
     const tratamiento = await this.tratamientoRepository.findOneBy({ id });
+
     if (!tratamiento) {
-      throw new Error(`Tratamiento con id ${id} no encontrado`);
+      throw new NotFoundException(`Tratamiento con id ${id} no encontrado`);
     }
+
     return tratamiento;
   }
 
   async update(id: number, updateTratamientoDto: UpdateTratamientoDto) {
-    await this.findOne(id);
-    await this.tratamientoRepository.update(id, updateTratamientoDto);
-    return this.findOne(id);
+    const tratamiento = await this.tratamientoRepository.preload({
+      id,
+      ...updateTratamientoDto,
+    });
+
+    if (!tratamiento) {
+      throw new NotFoundException(`Tratamiento con id ${id} no encontrado`);
+    }
+
+    try {
+      await this.tratamientoRepository.save(tratamiento);
+
+      return tratamiento;
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException(
+        'Error al actualizar el tratamiento',
+      );
+    }
   }
 
   async remove(id: number) {
     const tratamiento = await this.findOne(id);
-    await this.tratamientoRepository.delete(tratamiento);
-    return { message: `Tratamiento eliminado correctamente` };
+
+    await this.tratamientoRepository.remove(tratamiento);
+
+    return {
+      message: 'Tratamiento eliminado correctamente',
+    };
   }
 }

@@ -1,8 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
 import { CreateAdministradorDto } from './dto/create-administrador.dto';
 import { UpdateAdministradorDto } from './dto/update-administrador.dto';
+
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Administrador } from './entities/administrador.entity';
+
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -13,8 +21,15 @@ export class AdministradorService {
   ) {}
 
   async create(createAdministradorDto: CreateAdministradorDto) {
-    const admin = this.administradorRepository.create(createAdministradorDto);
-    return await this.administradorRepository.save(admin);
+    try {
+      const admin = this.administradorRepository.create(createAdministradorDto);
+
+      return await this.administradorRepository.save(admin);
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al crear el administrador');
+    }
   }
 
   async findAll() {
@@ -32,14 +47,35 @@ export class AdministradorService {
   }
 
   async update(id: number, updateAdministradorDto: UpdateAdministradorDto) {
-    await this.findOne(id);
-    await this.administradorRepository.update(id, updateAdministradorDto);
-    return this.findOne(id);
+    const admin = await this.administradorRepository.preload({
+      id,
+      ...updateAdministradorDto,
+    });
+
+    if (!admin) {
+      throw new NotFoundException(`Administrador con id ${id} no encontrado`);
+    }
+
+    try {
+      await this.administradorRepository.save(admin);
+
+      return admin;
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException(
+        'Error al actualizar el administrador',
+      );
+    }
   }
 
   async remove(id: number) {
-    await this.findOne(id);
-    await this.administradorRepository.delete(id);
-    return { message: 'Administrador eliminado correctamente' };
+    const admin = await this.findOne(id);
+
+    await this.administradorRepository.remove(admin);
+
+    return {
+      message: 'Administrador eliminado correctamente',
+    };
   }
 }

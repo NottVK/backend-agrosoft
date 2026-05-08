@@ -1,9 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('instructor')
-export class instructor {
+export class Instructor { 
 
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryGeneratedColumn() 
     id_instructor: number;
 
     @Column()
