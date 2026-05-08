@@ -13,7 +13,13 @@ import { CosechaModule } from './cosecha/cosecha.module';
 import { EnfermedadesModule } from './enfermedades/enfermedades.module';
 import { InstructorModule } from './instructor/instructor.module';
 import { RolModule } from './rol/rol.module';
+<<<<<<< HEAD
 import { CoordinadorModule } from './coordinador/coordinador.module';
+=======
+import { ReporteModule } from './reporte/reporte.module';
+import { VentaModule } from './venta/venta.module';
+import { VisitanteModule } from './visitante/visitante.module';
+>>>>>>> origin/Kevin_Dev
 
 @Module({
   imports: [
@@ -26,7 +32,7 @@ import { CoordinadorModule } from './coordinador/coordinador.module';
       password: process.env.PASSWORD,
       database: process.env.DATABASE,
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
     }),
     InsumoModule,
     CultivoRealModule,
@@ -41,6 +47,7 @@ import { CoordinadorModule } from './coordinador/coordinador.module';
     InstructorModule,
     RolModule,
     CoordinadorModule,
+    VisitanteModule,
     
 
   ],

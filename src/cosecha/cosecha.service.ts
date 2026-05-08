@@ -1,49 +1,79 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
 import { CreateCosechaDto } from './dto/create-cosecha.dto';
 import { UpdateCosechaDto } from './dto/update-cosecha.dto';
+
 import { Cosecha } from './entities/cosecha.entity';
+
 import { Repository } from 'typeorm';
+
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CosechaService {
   constructor(
     @InjectRepository(Cosecha)
-    private readonly CosechaRepository: Repository<Cosecha>,
-  ){}
+    private readonly cosechaRepository: Repository<Cosecha>,
+  ) {}
+
   async create(createCosechaDto: CreateCosechaDto) {
-    const Cosecha = this.CosechaRepository.create(createCosechaDto);
-    return await this.CosechaRepository.save(Cosecha);
+    try {
+      const cosecha = this.cosechaRepository.create(createCosechaDto);
+
+      return await this.cosechaRepository.save(cosecha);
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al crear la cosecha');
+    }
   }
 
   async findAll() {
-    return await this.CosechaRepository.find();
+    return await this.cosechaRepository.find();
   }
 
   async findOne(id: number) {
-    const Cosecha = await this.CosechaRepository.findOneBy({ id });
+    const cosecha = await this.cosechaRepository.findOneBy({ id });
 
-    if (!Cosecha) {
-      throw new NotFoundException(' cosecha con id ${id} no encontrado')
+    if (!cosecha) {
+      throw new NotFoundException(`Cosecha con id ${id} no encontrada`);
     }
 
-    return  Cosecha
+    return cosecha;
   }
 
   async update(id: number, updateCosechaDto: UpdateCosechaDto) {
-    await this.findOne(id);
+    const cosecha = await this.cosechaRepository.preload({
+      id,
+      ...updateCosechaDto,
+    });
 
-    await this.CosechaRepository.update(id, updateCosechaDto)
+    if (!cosecha) {
+      throw new NotFoundException(`Cosecha con id ${id} no encontrada`);
+    }
 
-    return this.findOne(id);
+    try {
+      await this.cosechaRepository.save(cosecha);
+
+      return cosecha;
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al actualizar la cosecha');
+    }
   }
 
   async remove(id: number) {
-    await this.findOne(id);
-    
-    await this.CosechaRepository.delete(id);
+    const cosecha = await this.findOne(id);
 
-    return { message: 'cosecha eliminada correctamente'};
-   
+    await this.cosechaRepository.remove(cosecha);
+
+    return {
+      message: 'Cosecha eliminada correctamente',
+    };
   }
 }

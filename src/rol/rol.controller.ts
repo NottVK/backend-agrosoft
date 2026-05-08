@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { RolService } from './rol.service';
 import { CreateRolDto } from './dto/create-rol.dto';
 import { UpdateRolDto } from './dto/update-rol.dto';
@@ -18,17 +27,24 @@ export class RolController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rolService.finOne(id);
+  // Agregamos ParseIntPipe para transformar el string a number
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    // Corregido: de 'finOne' a 'findOne'
+    return this.rolService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRolDto: UpdateRolDto) {
+  // Agregamos ParseIntPipe aquí también
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateRolDto: UpdateRolDto,
+  ) {
     return this.rolService.update(id, updateRolDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  // Agregamos ParseIntPipe aquí también
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.rolService.remove(id);
   }
 }

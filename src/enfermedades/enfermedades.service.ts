@@ -1,37 +1,84 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
 import { CreateEnfermedadeDto } from './dto/create-enfermedade.dto';
 import { UpdateEnfermedadeDto } from './dto/update-enfermedade.dto';
-import { Repository } from 'typeorm';
-import { Enfermedade } from './entities/enfermedade.entity';
+
 import { InjectRepository } from '@nestjs/typeorm';
+
+import { Repository } from 'typeorm';
+
+import { Enfermedade } from './entities/enfermedade.entity';
 
 @Injectable()
 export class EnfermedadesService {
-  insumoRepository: any;
-  enfermedadeRepository: any;
   constructor(
     @InjectRepository(Enfermedade)
-    private readonly EnfermedadeRepository: Repository<Enfermedade>,
+    private readonly enfermedadeRepository: Repository<Enfermedade>,
   ) {}
 
   async create(createEnfermedadeDto: CreateEnfermedadeDto) {
-    const Enfermedade = this.enfermedadeRepository.create(createEnfermedadeDto);
-    return await this.enfermedadeRepository.save(Enfermedade);
+    try {
+      const enfermedade =
+        this.enfermedadeRepository.create(createEnfermedadeDto);
+
+      return await this.enfermedadeRepository.save(enfermedade);
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al crear la enfermedad');
+    }
   }
 
-  findAll() {
-    return this.enfermedadeRepository.find();
+  async findAll() {
+    return await this.enfermedadeRepository.find();
   }
 
-  findOne(id: number) {
-    return this.enfermedadeRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const enfermedade = await this.enfermedadeRepository.findOneBy({
+      id_enfermedad: id,
+    });
+
+    if (!enfermedade) {
+      throw new NotFoundException(`Enfermedad con id ${id} no encontrada`);
+    }
+
+    return enfermedade;
   }
 
   async update(id: string, updateEnfermedadeDto: UpdateEnfermedadeDto) {
-    return this.enfermedadeRepository.update(id, updateEnfermedadeDto);
+    const enfermedade = await this.enfermedadeRepository.preload({
+      id_enfermedad: id,
+      ...updateEnfermedadeDto,
+    });
+
+    if (!enfermedade) {
+      throw new NotFoundException(`Enfermedad con id ${id} no encontrada`);
+    }
+
+    try {
+      await this.enfermedadeRepository.save(enfermedade);
+
+      return enfermedade;
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException(
+        'Error al actualizar la enfermedad',
+      );
+    }
   }
 
   async remove(id: string) {
-    return this.enfermedadeRepository.delete(id);
+    const enfermedade = await this.findOne(id);
+
+    await this.enfermedadeRepository.remove(enfermedade);
+
+    return {
+      message: 'Enfermedad eliminada correctamente',
+    };
   }
 }

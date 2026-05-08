@@ -1,8 +1,7 @@
 import { Type } from "class-transformer";
 import { IsNumber } from "class-validator";
 
-export class CreateCoordinadorDto {
-
+export class CreateVisitanteDto {
     @Type(() => Number)
     @IsNumber()
     id_rol: number;
@@ -11,4 +10,3 @@ export class CreateCoordinadorDto {
     @IsNumber()
     id_usuario: number;
 }
-

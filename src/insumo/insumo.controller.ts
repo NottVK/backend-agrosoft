@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { InsumoService } from './insumo.service';
 import { CreateInsumoDto } from './dto/create-insumo.dto';
@@ -26,17 +27,21 @@ export class InsumoController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    // Transformación a número
     return this.insumoService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInsumoDto: UpdateInsumoDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateInsumoDto: UpdateInsumoDto,
+  ) {
     return this.insumoService.update(id, updateInsumoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.insumoService.remove(id);
   }
 }

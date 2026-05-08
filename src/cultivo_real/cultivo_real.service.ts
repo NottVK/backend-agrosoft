@@ -1,20 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
 import { CreateCultivoRealDto } from './dto/create-cultivo_real.dto';
 import { UpdateCultivoRealDto } from './dto/update-cultivo_real.dto';
+
 import { CultivoReal } from './entities/cultivo_real.entity';
+
 import { Repository } from 'typeorm';
+
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CultivoRealService {
   constructor(
     @InjectRepository(CultivoReal)
-    private cultivoRealRepository: Repository<CultivoReal>,
+    private readonly cultivoRealRepository: Repository<CultivoReal>,
   ) {}
 
   async create(createCultivoRealDto: CreateCultivoRealDto) {
-    const cultivoReal = this.cultivoRealRepository.create(createCultivoRealDto);
-    return await this.cultivoRealRepository.save(cultivoReal);
+    try {
+      const cultivoReal =
+        this.cultivoRealRepository.create(createCultivoRealDto);
+
+      return await this.cultivoRealRepository.save(cultivoReal);
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al crear el cultivo');
+    }
   }
 
   async findAll() {
@@ -32,18 +48,33 @@ export class CultivoRealService {
   }
 
   async update(id: number, updateCultivoRealDto: UpdateCultivoRealDto) {
-    await this.findOne(id);
+    const cultivoReal = await this.cultivoRealRepository.preload({
+      id,
+      ...updateCultivoRealDto,
+    });
 
-    await this.cultivoRealRepository.update(id, updateCultivoRealDto);
+    if (!cultivoReal) {
+      throw new NotFoundException(`CultivoReal con id ${id} no encontrado`);
+    }
 
-    return this.findOne(id);
+    try {
+      await this.cultivoRealRepository.save(cultivoReal);
+
+      return cultivoReal;
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al actualizar el cultivo');
+    }
   }
 
   async remove(id: number) {
-    await this.findOne(id);
+    const cultivoReal = await this.findOne(id);
 
-    await this.cultivoRealRepository.delete(id);
+    await this.cultivoRealRepository.remove(cultivoReal);
 
-    return { message: `CultivoReal eliminado correctamente` };
+    return {
+      message: 'Cultivo eliminado correctamente',
+    };
   }
 }
