@@ -1,8 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
 import { CreatePlagasDto } from './dto/create-plagas.dto';
 import { UpdatePlagasDto } from './dto/update-plagas.dto';
+
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Plagas } from './entities/plagas.entity';
+
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -11,27 +19,63 @@ export class PlagasService {
     @InjectRepository(Plagas)
     private readonly plagasRepository: Repository<Plagas>,
   ) {}
-  
-  async create(createPlagasDto: CreatePlagasDto){
-    const plagas = this.plagasRepository.create(createPlagasDto);
-    return await this.plagasRepository.save(plagas);   
+
+  async create(createPlagasDto: CreatePlagasDto) {
+    try {
+      const plagas = this.plagasRepository.create(createPlagasDto);
+
+      return await this.plagasRepository.save(plagas);
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al crear la plaga');
+    }
   }
 
-  findAll() {
-    return  this.plagasRepository.find();
+  async findAll() {
+    return await this.plagasRepository.find();
   }
 
-  findOne(id: number) {
-    return this.plagasRepository.findOneBy({id_plagas: id});
+  async findOne(id: number) {
+    const plagas = await this.plagasRepository.findOneBy({
+      id_plagas: id,
+    });
+
+    if (!plagas) {
+      throw new NotFoundException(`Plaga con id ${id} no encontrada`);
+    }
+
+    return plagas;
   }
 
   async update(id: number, updatePlagasDto: UpdatePlagasDto) {
-    await this.plagasRepository.update(id, updatePlagasDto); 
-    return this.findOne(id);
+    const plagas = await this.plagasRepository.preload({
+      id_plagas: id,
+      ...updatePlagasDto,
+    });
+
+    if (!plagas) {
+      throw new NotFoundException(`Plaga con id ${id} no encontrada`);
+    }
+
+    try {
+      await this.plagasRepository.save(plagas);
+
+      return plagas;
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Error al actualizar la plaga');
+    }
   }
 
   async remove(id: number) {
-    await this.plagasRepository.delete(id);  
-    return {message: 'Plagas ha sido eliminado correctamente'};
+    const plagas = await this.findOne(id);
+
+    await this.plagasRepository.remove(plagas);
+
+    return {
+      message: 'Plaga eliminada correctamente',
+    };
   }
 }
