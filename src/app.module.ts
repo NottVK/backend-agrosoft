@@ -13,6 +13,8 @@ import { CosechaModule } from './cosecha/cosecha.module';
 import { EnfermedadesModule } from './enfermedades/enfermedades.module';
 import { InstructorModule } from './instructor/instructor.module';
 import { RolModule } from './rol/rol.module';
+import { ReporteModule } from './reporte/reporte.module';
+import { VentaModule } from './venta/venta.module';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { RolModule } from './rol/rol.module';
       password: process.env.PASSWORD,
       database: process.env.DATABASE,
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
     }),
     InsumoModule,
     CultivoRealModule,
@@ -39,6 +41,8 @@ import { RolModule } from './rol/rol.module';
     EnfermedadesModule,
     InstructorModule,
     RolModule,
+    ReporteModule,
+    VentaModule,
   ],
   controllers: [],
   providers: [],
