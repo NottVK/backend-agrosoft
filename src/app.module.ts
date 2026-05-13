@@ -13,6 +13,9 @@ import { CosechaModule } from './cosecha/cosecha.module';
 import { EnfermedadesModule } from './enfermedades/enfermedades.module';
 import { InstructorModule } from './instructor/instructor.module';
 import { RolModule } from './rol/rol.module';
+import { CultivoModule } from './base/cultivo/cultivo.module';
+import { CultivoBaseModule } from './cultivo_base/cultivo_base.module';
+import { PlanDeManejoModule } from './plan_de_manejo/plan_de_manejo.module';
 
 @Module({
   imports: [
@@ -39,6 +42,9 @@ import { RolModule } from './rol/rol.module';
     EnfermedadesModule,
     InstructorModule,
     RolModule,
+    CultivoModule,
+    CultivoBaseModule,
+    PlanDeManejoModule,
     
 
   ],
