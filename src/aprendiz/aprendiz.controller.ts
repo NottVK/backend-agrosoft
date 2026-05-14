@@ -17,18 +17,21 @@ export class AprendizController {
     return this.aprendizService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.aprendizService.findOne(+id);
-  }
+ @Get(':id')
+findOne(@Param('id') id: string) {
+  return this.aprendizService.findOne(id);
+}
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAprendizDto: UpdateAprendizDto) {
-    return this.aprendizService.update(+id, updateAprendizDto);
-  }
+@Patch(':id')
+update(
+  @Param('id') id: string,
+  @Body() updateAprendizDto: UpdateAprendizDto,
+) {
+  return this.aprendizService.update(id, updateAprendizDto);
+}
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.aprendizService.remove(+id);
-  }
+@Delete(':id')
+remove(@Param('id') id: string) {
+  return this.aprendizService.remove(id);
+}
 }
