@@ -1,16 +1,33 @@
-import { IsDateString, IsNotEmpty, IsString } from "class-validator";
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 
 export class CreateAprendizDto {
+
   @IsString()
-@IsNotEmpty()
-  tipo: string;
+  @IsNotEmpty()
+  id_insumo: string;
 
-@IsDateString()
-@IsNotEmpty()
-fecha: string;
+  @IsString()
+  @IsNotEmpty()
+  actividad_sugerida: string;
 
-@IsString()
-@IsNotEmpty()
-formato: string;
+  @IsNumber()
+  orden: number;
+
+  @IsString()
+  @IsNotEmpty()
+  tipo_tratamiento: string;
+
+  @IsDateString()
+  fecha_aplicacion_tratamiento: string;
+
+  @IsString()
+  descripcion: string;
+
+  @IsNumber()
+  cantidad_sugerida: number;
 }
-
