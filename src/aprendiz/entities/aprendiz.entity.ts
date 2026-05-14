@@ -26,6 +26,8 @@ export class Aprendiz {
   @Column('text')
   descripcion: string;
 
-  @Column('decimal')
-  cantidad_sugerida: number;
+  @Column({
+    type: 'decimal'
+  })
+  cantidad_sugeridad: number;
 }
