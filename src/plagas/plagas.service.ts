@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreatePlagasDto } from './dto/create-plagas.dto';
@@ -15,28 +16,28 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class PlagasService {
+  private readonly logger = new Logger(PlagasService.name);
+
   constructor(
     @InjectRepository(Plagas)
     private readonly plagasRepository: Repository<Plagas>,
   ) {}
 
-  async create(createPlagasDto: CreatePlagasDto) {
+  async create(createPlagasDto: CreatePlagasDto): Promise<Plagas> {
     try {
       const plagas = this.plagasRepository.create(createPlagasDto);
 
       return await this.plagasRepository.save(plagas);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear la plaga');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Plagas[]> {
     return await this.plagasRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Plagas> {
     const plagas = await this.plagasRepository.findOneBy({
       id_plagas: id,
     });
@@ -48,7 +49,7 @@ export class PlagasService {
     return plagas;
   }
 
-  async update(id: number, updatePlagasDto: UpdatePlagasDto) {
+  async update(id: number, updatePlagasDto: UpdatePlagasDto): Promise<Plagas> {
     const plagas = await this.plagasRepository.preload({
       id_plagas: id,
       ...updatePlagasDto,
@@ -63,9 +64,7 @@ export class PlagasService {
 
       return plagas;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al actualizar la plaga');
+      this.handleDBExceptions(error);
     }
   }
 
@@ -77,5 +76,11 @@ export class PlagasService {
     return {
       message: 'Plaga eliminada correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

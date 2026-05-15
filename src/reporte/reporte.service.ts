@@ -1,64 +1,89 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
+
 import { CreateReporteDto } from './dto/create-reporte.dto';
 import { UpdateReporteDto } from './dto/update-reporte.dto';
+
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Repository } from 'typeorm';
+
 import { Reporte } from './entities/reporte.entity';
-import { error } from 'console';
 
 @Injectable()
 export class ReporteService {
+  private readonly logger = new Logger(ReporteService.name);
+
   constructor(
     @InjectRepository(Reporte)
     private readonly reporteRepository: Repository<Reporte>,
-  ){}
-  async create(createReporteDto: CreateReporteDto) {
-  try{
-    const reporte=this.reporteRepository.create(createReporteDto)
-    await this.reporteRepository.save(reporte);
-  }
-  catch (error){
-    console.log(error)
-    throw new InternalServerErrorException('error al registrar el reporte')
-  }
-  }
+  ) {}
 
-  async findAll() {
-    return this.reporteRepository.find();
-  }
+  async create(createReporteDto: CreateReporteDto): Promise<Reporte> {
+    try {
+      const reporte = this.reporteRepository.create(createReporteDto);
 
-  async findOne(id: string) {
-    const reporte=await this.reporteRepository.findOneBy({id});
-    if (!reporte){
-      throw new NotFoundException(`reporte con id ${id} no existe`)
+      return await this.reporteRepository.save(reporte);
+    } catch (error) {
+      this.handleDBExceptions(error);
     }
+  }
+
+  async findAll(): Promise<Reporte[]> {
+    return await this.reporteRepository.find();
+  }
+
+  async findOne(id: string): Promise<Reporte> {
+    const reporte = await this.reporteRepository.findOneBy({
+      id,
+    });
+
+    if (!reporte) {
+      throw new NotFoundException(`Reporte con id ${id} no existe`);
+    }
+
     return reporte;
   }
 
-  async update(id: string, updateReporteDto: UpdateReporteDto) {
-    const reporte=await this.reporteRepository.preload({
+  async update(
+    id: string,
+    updateReporteDto: UpdateReporteDto,
+  ): Promise<Reporte> {
+    const reporte = await this.reporteRepository.preload({
       id,
-      ... updateReporteDto,
+      ...updateReporteDto,
     });
-    if (!reporte){
-      throw new NotFoundException('reporte con id ${id} no existe');
+
+    if (!reporte) {
+      throw new NotFoundException(`Reporte con id ${id} no existe`);
     }
-    
-try {
+
+    try {
       await this.reporteRepository.save(reporte);
+
       return reporte;
     } catch (error) {
-      console.log(error);
-      throw new InternalServerErrorException('No se pudo actualizar');
+      this.handleDBExceptions(error);
     }
-  
-
   }
 
   async remove(id: string) {
-    const reporte =await this.findOne(id);
+    const reporte = await this.findOne(id);
+
     await this.reporteRepository.remove(reporte);
-    return { mensaje: 'reporte eliminado correctamente' };
-  }
+
+    return {
+      message: 'Reporte eliminado correctamente',
+    };
   }
 
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
+  }
+}

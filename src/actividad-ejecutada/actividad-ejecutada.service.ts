@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateActividadEjecutadaDto } from './dto/create-actividad-ejecutada.dto';
@@ -15,12 +16,16 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class ActividadEjecutadaService {
+  private readonly logger = new Logger(ActividadEjecutadaService.name);
+
   constructor(
     @InjectRepository(ActividadEjecutada)
     private readonly actividadEjecutadaRepository: Repository<ActividadEjecutada>,
   ) {}
 
-  async create(createActividadEjecutadaDto: CreateActividadEjecutadaDto) {
+  async create(
+    createActividadEjecutadaDto: CreateActividadEjecutadaDto,
+  ): Promise<ActividadEjecutada> {
     try {
       const actividadEjecutada = this.actividadEjecutadaRepository.create(
         createActividadEjecutadaDto,
@@ -28,19 +33,15 @@ export class ActividadEjecutadaService {
 
       return await this.actividadEjecutadaRepository.save(actividadEjecutada);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al crear la actividad ejecutada',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<ActividadEjecutada[]> {
     return await this.actividadEjecutadaRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<ActividadEjecutada> {
     const actividadEjecutada =
       await this.actividadEjecutadaRepository.findOneBy({
         id,
@@ -58,7 +59,7 @@ export class ActividadEjecutadaService {
   async update(
     id: number,
     updateActividadEjecutadaDto: UpdateActividadEjecutadaDto,
-  ) {
+  ): Promise<ActividadEjecutada> {
     const actividadEjecutada = await this.actividadEjecutadaRepository.preload({
       id,
       ...updateActividadEjecutadaDto,
@@ -75,11 +76,7 @@ export class ActividadEjecutadaService {
 
       return actividadEjecutada;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al actualizar la actividad ejecutada',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
@@ -91,5 +88,11 @@ export class ActividadEjecutadaService {
     return {
       message: 'ActividadEjecutada eliminada correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

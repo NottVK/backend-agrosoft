@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateAdministradorDto } from './dto/create-administrador.dto';
@@ -15,6 +16,8 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class AdministradorService {
+  private readonly logger = new Logger(AdministradorService.name);
+
   constructor(
     @InjectRepository(Administrador)
     private readonly administradorRepository: Repository<Administrador>,
@@ -26,17 +29,15 @@ export class AdministradorService {
 
       return await this.administradorRepository.save(admin);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear el administrador');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Administrador[]> {
     return await this.administradorRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Administrador> {
     const admin = await this.administradorRepository.findOneBy({ id });
 
     if (!admin) {
@@ -46,7 +47,10 @@ export class AdministradorService {
     return admin;
   }
 
-  async update(id: number, updateAdministradorDto: UpdateAdministradorDto) {
+  async update(
+    id: number,
+    updateAdministradorDto: UpdateAdministradorDto,
+  ): Promise<Administrador> {
     const admin = await this.administradorRepository.preload({
       id,
       ...updateAdministradorDto,
@@ -61,11 +65,7 @@ export class AdministradorService {
 
       return admin;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al actualizar el administrador',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
@@ -77,5 +77,11 @@ export class AdministradorService {
     return {
       message: 'Administrador eliminado correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

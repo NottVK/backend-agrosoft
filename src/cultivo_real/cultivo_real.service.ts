@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateCultivoRealDto } from './dto/create-cultivo_real.dto';
@@ -15,30 +16,34 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CultivoRealService {
+  private readonly logger = new Logger(CultivoRealService.name);
+
   constructor(
     @InjectRepository(CultivoReal)
     private readonly cultivoRealRepository: Repository<CultivoReal>,
   ) {}
 
-  async create(createCultivoRealDto: CreateCultivoRealDto) {
+  async create(
+    createCultivoRealDto: CreateCultivoRealDto,
+  ): Promise<CultivoReal> {
     try {
       const cultivoReal =
         this.cultivoRealRepository.create(createCultivoRealDto);
 
       return await this.cultivoRealRepository.save(cultivoReal);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear el cultivo');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<CultivoReal[]> {
     return await this.cultivoRealRepository.find();
   }
 
-  async findOne(id: number) {
-    const cultivoReal = await this.cultivoRealRepository.findOneBy({ id });
+  async findOne(id: number): Promise<CultivoReal> {
+    const cultivoReal = await this.cultivoRealRepository.findOneBy({
+      id,
+    });
 
     if (!cultivoReal) {
       throw new NotFoundException(`CultivoReal con id ${id} no encontrado`);
@@ -47,7 +52,10 @@ export class CultivoRealService {
     return cultivoReal;
   }
 
-  async update(id: number, updateCultivoRealDto: UpdateCultivoRealDto) {
+  async update(
+    id: number,
+    updateCultivoRealDto: UpdateCultivoRealDto,
+  ): Promise<CultivoReal> {
     const cultivoReal = await this.cultivoRealRepository.preload({
       id,
       ...updateCultivoRealDto,
@@ -62,9 +70,7 @@ export class CultivoRealService {
 
       return cultivoReal;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al actualizar el cultivo');
+      this.handleDBExceptions(error);
     }
   }
 
@@ -76,5 +82,11 @@ export class CultivoRealService {
     return {
       message: 'Cultivo eliminado correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

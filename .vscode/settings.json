@@ -3,6 +3,7 @@
         "Actividad",
         "cultivo",
         "enfermedad",
-        "Insumo"
+        "Insumo",
+        "Visitante"
     ]
 }

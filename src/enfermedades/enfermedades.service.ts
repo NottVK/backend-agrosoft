@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateEnfermedadeDto } from './dto/create-enfermedade.dto';
@@ -15,29 +16,31 @@ import { Enfermedade } from './entities/enfermedade.entity';
 
 @Injectable()
 export class EnfermedadesService {
+  private readonly logger = new Logger(EnfermedadesService.name);
+
   constructor(
     @InjectRepository(Enfermedade)
     private readonly enfermedadeRepository: Repository<Enfermedade>,
   ) {}
 
-  async create(createEnfermedadeDto: CreateEnfermedadeDto) {
+  async create(
+    createEnfermedadeDto: CreateEnfermedadeDto,
+  ): Promise<Enfermedade> {
     try {
       const enfermedade =
         this.enfermedadeRepository.create(createEnfermedadeDto);
 
       return await this.enfermedadeRepository.save(enfermedade);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear la enfermedad');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Enfermedade[]> {
     return await this.enfermedadeRepository.find();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Enfermedade> {
     const enfermedade = await this.enfermedadeRepository.findOneBy({
       id_enfermedad: id,
     });
@@ -49,7 +52,10 @@ export class EnfermedadesService {
     return enfermedade;
   }
 
-  async update(id: string, updateEnfermedadeDto: UpdateEnfermedadeDto) {
+  async update(
+    id: string,
+    updateEnfermedadeDto: UpdateEnfermedadeDto,
+  ): Promise<Enfermedade> {
     const enfermedade = await this.enfermedadeRepository.preload({
       id_enfermedad: id,
       ...updateEnfermedadeDto,
@@ -64,11 +70,7 @@ export class EnfermedadesService {
 
       return enfermedade;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al actualizar la enfermedad',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
@@ -80,5 +82,11 @@ export class EnfermedadesService {
     return {
       message: 'Enfermedad eliminada correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

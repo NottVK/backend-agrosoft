@@ -2,42 +2,48 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateTratamientoDto } from './dto/create-tratamiento.dto';
 import { UpdateTratamientoDto } from './dto/update-tratamiento.dto';
 
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Tratamiento } from './entities/tratamiento.entity';
 
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class TratamientoService {
+  private readonly logger = new Logger(TratamientoService.name);
+
   constructor(
     @InjectRepository(Tratamiento)
     private readonly tratamientoRepository: Repository<Tratamiento>,
   ) {}
 
-  async create(createTratamientoDto: CreateTratamientoDto) {
+  async create(
+    createTratamientoDto: CreateTratamientoDto,
+  ): Promise<Tratamiento> {
     try {
       const tratamiento =
         this.tratamientoRepository.create(createTratamientoDto);
 
       return await this.tratamientoRepository.save(tratamiento);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear el tratamiento');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Tratamiento[]> {
     return await this.tratamientoRepository.find();
   }
 
-  async findOne(id: number) {
-    const tratamiento = await this.tratamientoRepository.findOneBy({ id });
+  async findOne(id: number): Promise<Tratamiento> {
+    const tratamiento = await this.tratamientoRepository.findOneBy({
+      id,
+    });
 
     if (!tratamiento) {
       throw new NotFoundException(`Tratamiento con id ${id} no encontrado`);
@@ -46,7 +52,10 @@ export class TratamientoService {
     return tratamiento;
   }
 
-  async update(id: number, updateTratamientoDto: UpdateTratamientoDto) {
+  async update(
+    id: number,
+    updateTratamientoDto: UpdateTratamientoDto,
+  ): Promise<Tratamiento> {
     const tratamiento = await this.tratamientoRepository.preload({
       id,
       ...updateTratamientoDto,
@@ -61,11 +70,7 @@ export class TratamientoService {
 
       return tratamiento;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al actualizar el tratamiento',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
@@ -77,5 +82,11 @@ export class TratamientoService {
     return {
       message: 'Tratamiento eliminado correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

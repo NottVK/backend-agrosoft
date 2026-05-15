@@ -1,64 +1,86 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
+
 import { CreateVentaDto } from './dto/create-venta.dto';
 import { UpdateVentaDto } from './dto/update-venta.dto';
+
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Venta } from './entities/venta.entity';
+
 import { Repository } from 'typeorm';
-import { error } from 'console';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class VentaService {
+  private readonly logger = new Logger(VentaService.name);
+
   constructor(
     @InjectRepository(Venta)
     private readonly ventaRepository: Repository<Venta>,
-  ){}
-  async create(createVentaDto: CreateVentaDto) {
-    try{
-      const venta= this.ventaRepository.create(createVentaDto)
+  ) {}
+
+  async create(createVentaDto: CreateVentaDto): Promise<Venta> {
+    try {
+      const venta = this.ventaRepository.create(createVentaDto);
+
+      return await this.ventaRepository.save(venta);
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
+  }
+
+  async findAll(): Promise<Venta[]> {
+    return await this.ventaRepository.find();
+  }
+
+  async findOne(id: string): Promise<Venta> {
+    const venta = await this.ventaRepository.findOneBy({
+      id,
+    });
+
+    if (!venta) {
+      throw new NotFoundException(`Venta con id ${id} no existe`);
+    }
+
+    return venta;
+  }
+
+  async update(id: string, updateVentaDto: UpdateVentaDto): Promise<Venta> {
+    const venta = await this.ventaRepository.preload({
+      id,
+      ...updateVentaDto,
+    });
+
+    if (!venta) {
+      throw new NotFoundException(`Venta con id ${id} no existe`);
+    }
+
+    try {
       await this.ventaRepository.save(venta);
-    }
-    catch (error){
-    console.log(error)
-    throw new InternalServerErrorException('error al registrar la venta')
-    }
-  }
 
-  async findAll() {
-    return this.ventaRepository.find();
-  }
-
-  async findOne(id: string) {
-      const venta=await this.ventaRepository.findOneBy({id});
-      if (!venta){
-        throw new  NotFoundException(`venta con id ${id} no existe`)
-      }
       return venta;
+    } catch (error) {
+      this.handleDBExceptions(error);
     }
-  
-    async update(id: string, updateVentaDto: UpdateVentaDto) {
-      const venta=await this.ventaRepository.preload({
-        id,
-        ... updateVentaDto,
-      });
-      if (!venta){
-        throw new NotFoundException(`reporte con id ${id} no existe`);
-      }
-      
-  try {
-        await this.ventaRepository.save(venta);
-        return venta;
-      } catch (error) {
-        console.log(error);
-        throw new InternalServerErrorException('No se pudo actualizar');
-      }
-    
-  
-    }
-  
-    async remove(id: string) {
-      const venta =await this.findOne(id);
-      await this.ventaRepository.remove(venta);
-      return { mensaje: 'venta eliminado correctamente' };
-    }
-    }
+  }
+
+  async remove(id: string) {
+    const venta = await this.findOne(id);
+
+    await this.ventaRepository.remove(venta);
+
+    return {
+      message: 'Venta eliminada correctamente',
+    };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
+  }
+}

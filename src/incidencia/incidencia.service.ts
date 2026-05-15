@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateIncidenciaDto } from './dto/create-incidencia.dto';
@@ -15,28 +16,28 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class IncidenciaService {
+  private readonly logger = new Logger(IncidenciaService.name);
+
   constructor(
     @InjectRepository(Incidencia)
     private readonly incidenciaRepository: Repository<Incidencia>,
   ) {}
 
-  async create(createIncidenciaDto: CreateIncidenciaDto) {
+  async create(createIncidenciaDto: CreateIncidenciaDto): Promise<Incidencia> {
     try {
       const incidencia = this.incidenciaRepository.create(createIncidenciaDto);
 
       return await this.incidenciaRepository.save(incidencia);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear la incidencia');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Incidencia[]> {
     return await this.incidenciaRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Incidencia> {
     const incidencia = await this.incidenciaRepository.findOneBy({
       id_incidencia: id,
     });
@@ -48,7 +49,10 @@ export class IncidenciaService {
     return incidencia;
   }
 
-  async update(id: number, updateIncidenciaDto: UpdateIncidenciaDto) {
+  async update(
+    id: number,
+    updateIncidenciaDto: UpdateIncidenciaDto,
+  ): Promise<Incidencia> {
     const incidencia = await this.incidenciaRepository.preload({
       id_incidencia: id,
       ...updateIncidenciaDto,
@@ -63,11 +67,7 @@ export class IncidenciaService {
 
       return incidencia;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al actualizar la incidencia',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
@@ -79,5 +79,11 @@ export class IncidenciaService {
     return {
       message: 'Incidencia eliminada correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

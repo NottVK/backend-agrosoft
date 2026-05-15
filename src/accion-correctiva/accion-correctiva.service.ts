@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateAccionCorrectivaDto } from './dto/create-accion-correctiva.dto';
@@ -15,12 +16,16 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class AccionCorrectivaService {
+  private readonly logger = new Logger(AccionCorrectivaService.name);
+
   constructor(
     @InjectRepository(AccionCorrectiva)
     private readonly accionCorrectivaRepository: Repository<AccionCorrectiva>,
   ) {}
 
-  async create(createAccionCorrectivaDto: CreateAccionCorrectivaDto) {
+  async create(
+    createAccionCorrectivaDto: CreateAccionCorrectivaDto,
+  ): Promise<AccionCorrectiva> {
     try {
       const accionCorrectiva = this.accionCorrectivaRepository.create(
         createAccionCorrectivaDto,
@@ -28,19 +33,15 @@ export class AccionCorrectivaService {
 
       return await this.accionCorrectivaRepository.save(accionCorrectiva);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al crear la acción correctiva',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<AccionCorrectiva[]> {
     return await this.accionCorrectivaRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<AccionCorrectiva> {
     const accionCorrectiva = await this.accionCorrectivaRepository.findOneBy({
       id,
     });
@@ -57,7 +58,7 @@ export class AccionCorrectivaService {
   async update(
     id: number,
     updateAccionCorrectivaDto: UpdateAccionCorrectivaDto,
-  ) {
+  ): Promise<AccionCorrectiva> {
     const accionCorrectiva = await this.accionCorrectivaRepository.preload({
       id,
       ...updateAccionCorrectivaDto,
@@ -74,11 +75,7 @@ export class AccionCorrectivaService {
 
       return accionCorrectiva;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException(
-        'Error al actualizar la acción correctiva',
-      );
+      this.handleDBExceptions(error);
     }
   }
 
@@ -90,5 +87,11 @@ export class AccionCorrectivaService {
     return {
       message: 'AccionCorrectiva eliminada correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

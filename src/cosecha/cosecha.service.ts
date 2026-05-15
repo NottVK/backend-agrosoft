@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateCosechaDto } from './dto/create-cosecha.dto';
@@ -15,28 +16,28 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CosechaService {
+  private readonly logger = new Logger(CosechaService.name);
+
   constructor(
     @InjectRepository(Cosecha)
     private readonly cosechaRepository: Repository<Cosecha>,
   ) {}
 
-  async create(createCosechaDto: CreateCosechaDto) {
+  async create(createCosechaDto: CreateCosechaDto): Promise<Cosecha> {
     try {
       const cosecha = this.cosechaRepository.create(createCosechaDto);
 
       return await this.cosechaRepository.save(cosecha);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear la cosecha');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Cosecha[]> {
     return await this.cosechaRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Cosecha> {
     const cosecha = await this.cosechaRepository.findOneBy({ id });
 
     if (!cosecha) {
@@ -46,7 +47,10 @@ export class CosechaService {
     return cosecha;
   }
 
-  async update(id: number, updateCosechaDto: UpdateCosechaDto) {
+  async update(
+    id: number,
+    updateCosechaDto: UpdateCosechaDto,
+  ): Promise<Cosecha> {
     const cosecha = await this.cosechaRepository.preload({
       id,
       ...updateCosechaDto,
@@ -61,9 +65,7 @@ export class CosechaService {
 
       return cosecha;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al actualizar la cosecha');
+      this.handleDBExceptions(error);
     }
   }
 
@@ -75,5 +77,11 @@ export class CosechaService {
     return {
       message: 'Cosecha eliminada correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

@@ -2,40 +2,42 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateRolDto } from './dto/create-rol.dto';
 import { UpdateRolDto } from './dto/update-rol.dto';
 
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Rol } from './entities/rol.entity';
 
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class RolService {
+  private readonly logger = new Logger(RolService.name);
+
   constructor(
     @InjectRepository(Rol)
     private readonly rolRepository: Repository<Rol>,
   ) {}
 
-  async create(createRolDto: CreateRolDto) {
+  async create(createRolDto: CreateRolDto): Promise<Rol> {
     try {
       const rol = this.rolRepository.create(createRolDto);
 
       return await this.rolRepository.save(rol);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear el rol');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Rol[]> {
     return await this.rolRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Rol> {
     const rol = await this.rolRepository.findOneBy({ id });
 
     if (!rol) {
@@ -45,7 +47,7 @@ export class RolService {
     return rol;
   }
 
-  async update(id: number, updateRolDto: UpdateRolDto) {
+  async update(id: number, updateRolDto: UpdateRolDto): Promise<Rol> {
     const rol = await this.rolRepository.preload({
       id,
       ...updateRolDto,
@@ -60,9 +62,7 @@ export class RolService {
 
       return rol;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al actualizar el rol');
+      this.handleDBExceptions(error);
     }
   }
 
@@ -74,5 +74,11 @@ export class RolService {
     return {
       message: 'Rol eliminado correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

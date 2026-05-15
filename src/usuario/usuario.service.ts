@@ -2,40 +2,42 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Usuario } from './entities/usuario.entity';
 
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsuarioService {
+  private readonly logger = new Logger(UsuarioService.name);
+
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
   ) {}
 
-  async create(createUsuarioDto: CreateUsuarioDto) {
+  async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
     try {
       const usuario = this.usuarioRepository.create(createUsuarioDto);
 
       return await this.usuarioRepository.save(usuario);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear el usuario');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Usuario[]> {
     return await this.usuarioRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOneBy({ id });
 
     if (!usuario) {
@@ -45,7 +47,10 @@ export class UsuarioService {
     return usuario;
   }
 
-  async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
+  async update(
+    id: number,
+    updateUsuarioDto: UpdateUsuarioDto,
+  ): Promise<Usuario> {
     const usuario = await this.usuarioRepository.preload({
       id,
       ...updateUsuarioDto,
@@ -60,9 +65,7 @@ export class UsuarioService {
 
       return usuario;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al actualizar el usuario');
+      this.handleDBExceptions(error);
     }
   }
 
@@ -74,5 +77,11 @@ export class UsuarioService {
     return {
       message: 'Usuario eliminado correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }

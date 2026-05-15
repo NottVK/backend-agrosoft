@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,28 +16,28 @@ import { Insumo } from './entities/insumo.entity';
 
 @Injectable()
 export class InsumoService {
+  private readonly logger = new Logger(InsumoService.name);
+
   constructor(
     @InjectRepository(Insumo)
     private readonly insumoRepository: Repository<Insumo>,
   ) {}
 
-  async create(createInsumoDto: CreateInsumoDto) {
+  async create(createInsumoDto: CreateInsumoDto): Promise<Insumo> {
     try {
       const insumo = this.insumoRepository.create(createInsumoDto);
 
       return await this.insumoRepository.save(insumo);
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al crear el insumo');
+      this.handleDBExceptions(error);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<Insumo[]> {
     return await this.insumoRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Insumo> {
     const insumo = await this.insumoRepository.findOneBy({ id });
 
     if (!insumo) {
@@ -46,7 +47,7 @@ export class InsumoService {
     return insumo;
   }
 
-  async update(id: number, updateInsumoDto: UpdateInsumoDto) {
+  async update(id: number, updateInsumoDto: UpdateInsumoDto): Promise<Insumo> {
     const insumo = await this.insumoRepository.preload({
       id,
       ...updateInsumoDto,
@@ -61,9 +62,7 @@ export class InsumoService {
 
       return insumo;
     } catch (error) {
-      console.log(error);
-
-      throw new InternalServerErrorException('Error al actualizar el insumo');
+      this.handleDBExceptions(error);
     }
   }
 
@@ -75,5 +74,11 @@ export class InsumoService {
     return {
       message: 'Insumo eliminado correctamente',
     };
+  }
+
+  private handleDBExceptions(error: any): never {
+    this.logger.error(error);
+
+    throw new InternalServerErrorException('Error interno del servidor');
   }
 }
