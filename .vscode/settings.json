@@ -4,6 +4,8 @@
         "cultivo",
         "enfermedad",
         "Insumo",
+        "manejo",
+        "plandemanejo",
         "Visitante"
     ]
 }
