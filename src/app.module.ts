@@ -13,6 +13,8 @@ import { CosechaModule } from './cosecha/cosecha.module';
 import { EnfermedadesModule } from './enfermedades/enfermedades.module';
 import { InstructorModule } from './instructor/instructor.module';
 import { RolModule } from './rol/rol.module';
+import { AprendizModule } from './aprendiz/aprendiz.module';
+
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { RolModule } from './rol/rol.module';
     EnfermedadesModule,
     InstructorModule,
     RolModule,
+    AprendizModule,
     
 
   ],
